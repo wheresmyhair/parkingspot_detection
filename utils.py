@@ -51,6 +51,11 @@ def draw_vertical(img, x_dist, color=(0, 0, 255), width=1):
         draw.line((x, y1, x, y2), fill=color, width=width)
         draw.text((x+10, y1+5), str(x), fill=(0, 0, 255), font=ImageFont.truetype('./fonts/MSYH.TTC', 9))
 
+def draw_bbox(img, x, y, width, height, text, text_offset=[0,0]):
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((x, y, x+width, y+height), outline=(255, 0, 0), width=1)
+    draw.text((x+text_offset[0], y-20+text_offset[1]), str(text), fill=(255, 0, 0), font=ImageFont.truetype('./fonts/MSYH.TTC', 15))
+
 def denoise(img):
     img = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
     img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
