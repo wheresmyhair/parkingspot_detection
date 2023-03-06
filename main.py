@@ -55,6 +55,6 @@ def main(img, threshold=0.5):
 
 
 if __name__ == "__main__":
-    img = Image.open("./imgs/1.jpg")
-    status = main(img)
+    img = Image.open("./imgs/4.jpg")
+    status = main(img, 0.8)
     print(status)
