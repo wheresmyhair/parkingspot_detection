@@ -9,13 +9,14 @@ model = YOLO("./model/yolov8m.pt")
 
 
 # 主函数
-def main(img):
+def main(img, threshold=0.5):
     '''
     ## Description:
         主函数
 
     ## Args:
         img: PIL.Image
+        threshold: float, intersection_over_spot阈值
 
     ## Returns:
         status: list
@@ -46,7 +47,7 @@ def main(img):
         for _, (x_yolo, y_yolo, w_yolo, h_yolo) in enumerate(res_cord):
             box = [x_yolo.item(), y_yolo.item(), w_yolo.item(), h_yolo.item()]
             intersection_over_spot = utils.iobox2(box, spot)
-            if intersection_over_spot > 0.5:
+            if intersection_over_spot > threshold:
                 status[idx_spot] = True
                 break
     
