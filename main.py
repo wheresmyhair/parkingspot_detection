@@ -3,30 +3,57 @@ from PIL import Image
 import utils
 import config as cfg
 
-# Load a model
-# model = YOLO("yolov8m.yaml")  # build a new model from scratch
-model = YOLO("yolov8x.pt")  # load a pretrained model (recommended for training)
 
-img = Image.open("./8.jfif")
-results = model.predict(source=img, save=True, conf=0.03, iou=0.35, hide_labels=True)
-
-# draw global grid on image 
-path_img = './4.jpg'
-path_img_out = './4_grid.jpg'
+# 模型加载
+model = YOLO("./model/yolov8m.pt")  
 
 
-img = Image.open(path_img)
-utils.draw_horizon(img, 25)
-utils.draw_vertical(img, 25)
-img.save(path_img_out)
+# 主函数
+def main(img):
+    '''
+    ## Description:
+        主函数
+
+    ## Args:
+        img: PIL.Image
+
+    ## Returns:
+        status: list
+    '''
+    # 分辨率提升
+    img = utils.upscale(img)
+
+    # 预测与预测结果处理
+    results = model.predict(source=img, save=False, conf=0.01, iou=0.3, hide_labels=True)
+    res_cord = []
+    res_conf = []
+
+    for result in results:
+        res_cord.append(result.boxes.xywhn)
+        res_conf.append(result.boxes.conf)
+
+    res_cord = res_cord[0].cpu()
+    res_conf = res_conf[0].cpu()
+
+    # 车位状态
+    SPOTS = cfg.PARKING_SPOTS
+    status = [False]*len(SPOTS)
+
+    for idx_spot, (x_spot, y_spot, w_spot, h_spot) in SPOTS.items():
+        x, y, w, h = utils.ConvertCord.normalize(x_spot, y_spot, w_spot, h_spot, cfg.IMAGE_SIZE)
+        spot = [x, y, w, h]
+
+        for _, (x_yolo, y_yolo, w_yolo, h_yolo) in enumerate(res_cord):
+            box = [x_yolo.item(), y_yolo.item(), w_yolo.item(), h_yolo.item()]
+            intersection_over_spot = utils.iobox2(box, spot)
+            if intersection_over_spot > 0.5:
+                status[idx_spot] = True
+                break
+    
+    return status
 
 
-# draw parking spots on image
-img = Image.open('./1.jpg')
-
-SPOTS = cfg.PARKING_SPOTS
-
-for spot in SPOTS:
-    utils.draw_bbox(img, SPOTS[spot][0], SPOTS[spot][1], SPOTS[spot][2], SPOTS[spot][3], str(spot))
-
-img.save('./spots.jpg')
+if __name__ == "__main__":
+    img = Image.open("./imgs/1.jpg")
+    status = main(img)
+    print(status)

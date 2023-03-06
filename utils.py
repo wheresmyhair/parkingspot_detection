@@ -33,6 +33,10 @@ class ConvertCord:
             return x1, y1, x2-x1, y2-y1
         else:
             raise ValueError("style must be centerxywh or cornerxywh")
+        
+    @staticmethod
+    def normalize(x, y, w, h, img_size):
+        return x/img_size[0], y/img_size[1], w/img_size[0], h/img_size[1]
 
 def cropimg(img, x, y, w, h):
     return img[y:y+h, x:x+w]
@@ -75,3 +79,43 @@ def black_white(img):
     img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB))
     return img
+
+def iou(box1, box2):
+    '''
+    ## Description
+    Calculate the intersection over union of two bounding boxes.
+
+    ## Args
+    box1: (x1, y1, w1, h1)
+    box2: (x2, y2, w2, h2)
+
+    ## Returns
+    iou: float
+    '''
+    x1, y1, w1, h1 = box1
+    x2, y2, w2, h2 = box2
+    x1, y1, x2, y2 = max(x1, x2), max(y1, y2), min(x1+w1, x2+w2), min(y1+h1, y2+h2)
+    if x1 >= x2 or y1 >= y2:
+        return 0
+    else:
+        return (x2-x1)*(y2-y1)/(w1*h1+w2*h2-(x2-x1)*(y2-y1))
+    
+def iobox2(box1, box2):
+    '''
+    ## Description
+    Calculate the intersection of two box over box2.
+
+    ## Args
+    box1: (x1, y1, w1, h1)
+    box2: (x2, y2, w2, h2)
+
+    ## Returns
+    iobox2: float
+    '''
+    x1, y1, w1, h1 = box1
+    x2, y2, w2, h2 = box2
+    x1, y1, x2, y2 = max(x1, x2), max(y1, y2), min(x1+w1, x2+w2), min(y1+h1, y2+h2)
+    if x1 >= x2 or y1 >= y2:
+        return 0
+    else:
+        return (x2-x1)*(y2-y1)/(w2*h2)
